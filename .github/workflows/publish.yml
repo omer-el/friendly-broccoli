@@ -24,6 +24,31 @@ jobs:
           node-version: '18'
           registry-url: 'https://registry.npmjs.org'
 
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: |
+          if npm run | grep -q "test"; then
+            npm test --if-present
+          else
+            echo "No test script defined; skipping tests"
+          fi
+
+      - name: Build package
+        run: |
+          if npm run | grep -q "build"; then
+            npm run build
+          else
+            echo "No build script defined; skipping build"
+          fi
+
+      - name: Configure npm auth
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+
+
       - name: Extract version from tag
         id: version
         run: |
@@ -52,28 +77,6 @@ jobs:
           git commit -m "chore: bump version to ${{ steps.version.outputs.version }}" || echo "No changes to commit"
           git push origin HEAD:main || echo "Push failed or no permission; continuing"
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run tests
-        run: |
-          if npm run | grep -q "test"; then
-            npm test --if-present
-          else
-            echo "No test script defined; skipping tests"
-          fi
-
-      - name: Build package
-        run: |
-          if npm run | grep -q "build"; then
-            npm run build
-          else
-            echo "No build script defined; skipping build"
-          fi
-
-      - name: Configure npm auth
-        run: |
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
 
       - name: Publish to npm
         env:
